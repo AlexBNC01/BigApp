@@ -1,11 +1,12 @@
-// workhoursscreen
 import React, { useState, useContext, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Animated } from 'react-native';
-import { HistoryContext } from '../../context/HistoryContext'; // Правильный импорт для HistoryContext
+import { HistoryContext } from '../../context/HistoryContext';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 export default function WorkHoursScreen() {
-  const { addHistoryRecord } = useContext(HistoryContext); // Правильный доступ к addHistoryRecord из контекста
+  const { addHistoryRecord } = useContext(HistoryContext);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [startTime, setStartTime] = useState(null);
@@ -15,10 +16,10 @@ export default function WorkHoursScreen() {
   const [currentPicker, setCurrentPicker] = useState('start');
   const [isLunchSubtracted, setIsLunchSubtracted] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
-
   const notificationOpacity = useRef(new Animated.Value(0)).current;
 
   const customers = ['ГВЗХ', 'ГБ', 'Дорожники'];
+  const db = getFirestore();
 
   const handleCustomerSelect = (customer) => {
     setSelectedCustomer(customer);
@@ -49,7 +50,6 @@ export default function WorkHoursScreen() {
   const handleTimeConfirm = (time) => {
     const adjustedTime = new Date(time);
     const minutes = adjustedTime.getMinutes();
-
     if (minutes < 15) {
       adjustedTime.setMinutes(0);
     } else if (minutes < 45) {
@@ -58,7 +58,6 @@ export default function WorkHoursScreen() {
       adjustedTime.setMinutes(0);
       adjustedTime.setHours(adjustedTime.getHours() + 1);
     }
-
     adjustedTime.setSeconds(0);
     adjustedTime.setMilliseconds(0);
 
@@ -67,7 +66,6 @@ export default function WorkHoursScreen() {
     } else if (currentPicker === 'end') {
       setEndTime(adjustedTime);
     }
-
     hideTimePicker();
   };
 
@@ -77,7 +75,6 @@ export default function WorkHoursScreen() {
       const endHours = endTime.getHours() + endTime.getMinutes() / 60;
 
       let totalHours;
-
       if (endHours < startHours) {
         totalHours = 24 - startHours + endHours;
       } else {
@@ -97,7 +94,7 @@ export default function WorkHoursScreen() {
     setIsLunchSubtracted(!isLunchSubtracted);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!selectedCustomer || !selectedDate || !startTime || !endTime) {
       Alert.alert('Ошибка', 'Пожалуйста, заполните все поля перед добавлением.');
       return;
@@ -105,36 +102,41 @@ export default function WorkHoursScreen() {
 
     const workHours = calculateWorkHours();
 
-    addHistoryRecord({
-      date: selectedDate.toLocaleDateString(),
-      customer: selectedCustomer,
-      hours: workHours,
-    });
+    try {
+      await addDoc(collection(db, 'workHours'), {
+        date: selectedDate.toLocaleDateString(),
+        customer: selectedCustomer,
+        hours: workHours,
+        timestamp: new Date().toISOString(),
+      });
 
-    // Показ уведомления
-    setShowNotification(true);
-    Animated.timing(notificationOpacity, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setTimeout(() => {
-        Animated.timing(notificationOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          setShowNotification(false);
-        });
-      }, 1500);
-    });
+      // Показ уведомления
+      setShowNotification(true);
+      Animated.timing(notificationOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(() => {
+          Animated.timing(notificationOpacity, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            setShowNotification(false);
+          });
+        }, 1500);
+      });
 
-    // Сброс формы
-    setSelectedCustomer(null);
-    setSelectedDate(null);
-    setStartTime(null);
-    setEndTime(null);
-    setIsLunchSubtracted(false);
+      // Сброс формы
+      setSelectedCustomer(null);
+      setSelectedDate(null);
+      setStartTime(null);
+      setEndTime(null);
+      setIsLunchSubtracted(false);
+    } catch (error) {
+      alert('Ошибка при сохранении данных: ' + error.message);
+    }
   };
 
   return (

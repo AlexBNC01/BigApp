@@ -33,6 +33,9 @@ target 'MyWork' do
 
   config = use_native_modules!(config_command)
 
+  # Добавляем модульные заголовки для поддержки Swift модулей
+  use_modular_headers!
+
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
 
@@ -44,6 +47,11 @@ target 'MyWork' do
     :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
   )
 
+  # Подключаем Firebase модули
+  pod 'Firebase/Core'
+  pod 'Firebase/Auth'
+  pod 'Firebase/Firestore'
+
   post_install do |installer|
     react_native_post_install(
       installer,
@@ -52,8 +60,7 @@ target 'MyWork' do
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
 
-    # This is necessary for Xcode 14, because it signs resource bundles by default
-    # when building for devices.
+    # Это необходимо для Xcode 14, чтобы подписывать ресурсы
     installer.target_installation_results.pod_target_installation_results
       .each do |pod_name, target_installation_result|
       target_installation_result.resource_bundle_targets.each do |resource_bundle_target|

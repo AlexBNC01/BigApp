@@ -1,5 +1,4 @@
-// app.js //
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -10,6 +9,17 @@ import WorkHoursScreen from './src/screens/Driver/WorkHoursScreen';
 import HistoryScreen from './src/screens/Driver/HistoryScreen';
 import LoginScreen from './src/screens/Auth/LoginScreen';
 import RegisterScreen from './src/screens/Auth/RegisterScreen';
+
+import { initializeApp, getApps } from 'firebase/app';
+import firebaseConfig from './src/firebase-config'; // Путь к вашему конфигу
+
+// Инициализация Firebase (только если приложение еще не инициализировано)
+if (getApps().length === 0) {
+  initializeApp(firebaseConfig);
+} else {
+  // Приложение уже инициализировано
+  console.log("Firebase App already initialized");
+}
 
 // Initialize tab and stack navigators
 const Tab = createBottomTabNavigator();

@@ -1,3 +1,4 @@
+// RegisterScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../../context/AuthContext'; // Используем хук для авторизации
@@ -36,7 +37,7 @@ export default function RegisterScreen({ navigation }) {
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Зарегистрироваться</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Войти')}>
+      <TouchableOpacity onPress={() => navigation.navigate('Вход')}>
         <Text style={styles.linkText}>Уже есть аккаунт? Войти</Text>
       </TouchableOpacity>
     </View>
