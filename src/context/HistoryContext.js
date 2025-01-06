@@ -1,16 +1,46 @@
-// src/context/HistoryContext.js
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
-// Контекст для истории
 export const HistoryContext = createContext();
 
-// Поставщик контекста для истории
 export const HistoryProvider = ({ children }) => {
-  const [history, setHistory] = useState([]); // Состояние истории
+  const [history, setHistory] = useState([]);
 
-  // Функция добавления записи в историю
-  const addHistoryRecord = (record) => {
-    setHistory((prevHistory) => [...prevHistory, record]);
+  useEffect(() => {
+    // Загрузка данных из AsyncStorage
+    const loadLocalHistory = async () => {
+      const storedData = await AsyncStorage.getItem('workHours');
+      if (storedData) {
+        setHistory(JSON.parse(storedData));
+      }
+    };
+    
+    // Синхронизация с Firebase
+    const syncWithFirebase = async () => {
+      const db = getFirestore();
+      const querySnapshot = await getDocs(collection(db, 'workHours'));
+      const firebaseHistory = [];
+      querySnapshot.forEach((doc) => {
+        firebaseHistory.push(doc.data());
+      });
+      setHistory(firebaseHistory);
+    };
+
+    loadLocalHistory();
+    syncWithFirebase();
+  }, []);
+
+  const addHistoryRecord = async (record) => {
+    const updatedHistory = [...history, record];
+    setHistory(updatedHistory);
+    
+    // Обновление данных в AsyncStorage
+    await AsyncStorage.setItem('workHours', JSON.stringify(updatedHistory));
+
+    // Синхронизация с Firebase
+    const db = getFirestore();
+    await addDoc(collection(db, 'workHours'), record);
   };
 
   return (
@@ -19,6 +49,3 @@ export const HistoryProvider = ({ children }) => {
     </HistoryContext.Provider>
   );
 };
-
-// Хук для использования контекста
-export const useHistory = () => useContext(HistoryContext);

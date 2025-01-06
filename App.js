@@ -1,3 +1,4 @@
+// app.js
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -39,7 +40,7 @@ const MainTabs = () => (
     screenOptions={({ route }) => ({
       tabBarIcon: ({ focused, color, size }) => {
         let iconName;
-        if (route.name === 'Главная') {
+        if (route.name === 'WorkHours') {
           iconName = 'clock-o';
         } else if (route.name === 'История') {
           iconName = 'book';
@@ -51,7 +52,7 @@ const MainTabs = () => (
     })}
   >
     <Tab.Screen
-      name="Главная"
+      name="WorkHours"
       component={WorkHoursScreen}
       options={{ headerShown: false }}
     />

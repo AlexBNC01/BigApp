@@ -1,12 +1,10 @@
-// src/screens/Driver/HistoryScreen.js
 import React, { useContext } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { HistoryContext } from '../../context/HistoryContext';
 
 export default function HistoryScreen() {
-  const { history } = useContext(HistoryContext); // Используем правильный доступ к истории
+  const { history } = useContext(HistoryContext); 
 
-  // Понимание что история может быть пустой
   const totalHours = (history || []).reduce((sum, record) => sum + parseFloat(record.hours), 0);
   const salary = totalHours * 500;
 
@@ -24,7 +22,6 @@ export default function HistoryScreen() {
         </View>
       </View>
 
-      {/* Заголовки столбцов */}
       <View style={styles.tableHeader}>
         <Text style={styles.tableHeaderText}>Дата</Text>
         <Text style={styles.tableHeaderText}>Заказчик</Text>
@@ -32,7 +29,7 @@ export default function HistoryScreen() {
       </View>
 
       <FlatList
-        data={history} // Используем историю из контекста
+        data={history} 
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.tableRow}>

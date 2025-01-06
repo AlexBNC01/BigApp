@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, Animated } from 'react
 import { HistoryContext } from '../../context/HistoryContext';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function WorkHoursScreen() {
   const { addHistoryRecord } = useContext(HistoryContext);
@@ -101,14 +101,22 @@ export default function WorkHoursScreen() {
     }
 
     const workHours = calculateWorkHours();
+    const newRecord = {
+      date: selectedDate.toLocaleDateString(),
+      customer: selectedCustomer,
+      hours: workHours,
+      timestamp: new Date().toISOString(),
+    };
 
     try {
-      await addDoc(collection(db, 'workHours'), {
-        date: selectedDate.toLocaleDateString(),
-        customer: selectedCustomer,
-        hours: workHours,
-        timestamp: new Date().toISOString(),
-      });
+      // Добавляем запись в Firebase
+      await addDoc(collection(db, 'workHours'), newRecord);
+
+      // Добавляем запись в локальное хранилище
+      const storedData = await AsyncStorage.getItem('workHours');
+      let workHoursArray = storedData ? JSON.parse(storedData) : [];
+      workHoursArray.push(newRecord);
+      await AsyncStorage.setItem('workHours', JSON.stringify(workHoursArray));
 
       // Показ уведомления
       setShowNotification(true);
